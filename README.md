@@ -3,6 +3,11 @@ flogr is a php script that will display your public flickr photos in a customiza
 
 Go on and take it for a [spin](http://flogr.mikecarruth.org/).
 
+##This Fork	
+Is a work in progress intended to bring Flogr up to speed with the last few years of changes to the Flickr API and to php itself. I'll update the remainder of the below once the code changes themselves are underway.
+
+At the moment it's using a number of other libraries which I'll properly thank once I work out what they are and find proper links to them
+
 ##Main Features
 - Customizable photoblog interface for your flickr photos
 - Display all flickr photos, only photos with certain tags or only certain photosets

@@ -1,8 +1,8 @@
 <?php
 /**
- * $Header: /repository/pear/Log/Log/display.php,v 1.11 2008/03/20 16:03:57 jon Exp $
+ * $Header$
  *
- * @version $Revision: 1.11 $
+ * @version $Revision$
  * @package Log
  */
 
@@ -38,6 +38,15 @@ class Log_display extends Log
     var $_timeFormat = '%b %d %H:%M:%S';
 
     /**
+     * Flag indicating whether raw message text should be passed directly to
+     * the log system.  Otherwise, the text will be converted to an HTML-safe
+     * representation.
+     * @var boolean
+     * @access private
+     */
+    var $_rawText = false;
+
+    /**
      * Constructs a new Log_display object.
      *
      * @param string $name     Ignored.
@@ -46,10 +55,10 @@ class Log_display extends Log
      * @param int    $level    Log messages up to and including this level.
      * @access public
      */
-    function Log_display($name = '', $ident = '', $conf = array(),
-                         $level = PEAR_LOG_DEBUG)
+    public function __construct($name = '', $ident = '', $conf = array(),
+                                $level = PEAR_LOG_DEBUG)
     {
-        $this->_id = md5(microtime());
+        $this->_id = md5(microtime().rand());
         $this->_ident = $ident;
         $this->_mask = Log::UPTO($level);
 
@@ -92,6 +101,11 @@ class Log_display extends Log
         /* The user can also change the time format. */
         if (!empty($conf['timeFormat'])) {
             $this->_timeFormat = $conf['timeFormat'];
+        }
+
+        /* Message text conversion can be disabled. */
+        if (isset($conf['rawText'])) {
+            $this->_rawText = $conf['rawText'];
         }
     }
 
@@ -146,11 +160,17 @@ class Log_display extends Log
         /* Extract the string representation of the message. */
         $message = $this->_extractMessage($message);
 
+        /* Convert the message to an HTML-friendly represention unless raw
+         * text has been requested. */
+        if ($this->_rawText === false) {
+            $message = nl2br(htmlspecialchars($message));
+        }
+
         /* Build and output the complete log line. */
         echo $this->_format($this->_lineFormat,
                             strftime($this->_timeFormat),
                             $priority,
-                            nl2br(htmlspecialchars($message)));
+                            $message);
 
         /* Notify observers about this log message. */
         $this->_announce(array('priority' => $priority, 'message' => $message));

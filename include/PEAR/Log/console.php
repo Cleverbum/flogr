@@ -1,15 +1,15 @@
 <?php
 /**
- * $Header: /repository/pear/Log/Log/console.php,v 1.24 2006/12/07 04:15:02 jon Exp $
+ * $Header$
  *
- * @version $Revision: 1.24 $
+ * @version $Revision$
  * @package Log
  */
 
 /**
  * The Log_console class is a concrete implementation of the Log::
  * abstract class which writes message to the text console.
- * 
+ *
  * @author  Jon Parise <jon@php.net>
  * @since   Log 1.1
  * @package Log
@@ -23,7 +23,14 @@ class Log_console extends Log
      * @var resource
      * @access private
      */
-    var $_stream = STDOUT;
+    var $_stream = null;
+
+    /**
+     * Is this object responsible for closing the stream resource?
+     * @var bool
+     * @access private
+     */
+    var $_closeResource = false;
 
     /**
      * Should the output be buffered or displayed immediately?
@@ -57,22 +64,27 @@ class Log_console extends Log
 
     /**
      * Constructs a new Log_console object.
-     * 
+     *
      * @param string $name     Ignored.
      * @param string $ident    The identity string.
      * @param array  $conf     The configuration array.
      * @param int    $level    Log messages up to and including this level.
      * @access public
      */
-    function Log_console($name, $ident = '', $conf = array(),
-                         $level = PEAR_LOG_DEBUG)
+    public function __construct($name, $ident = '', $conf = array(),
+                                $level = PEAR_LOG_DEBUG)
     {
-        $this->_id = md5(microtime());
+        $this->_id = md5(microtime().rand());
         $this->_ident = $ident;
         $this->_mask = Log::UPTO($level);
 
         if (!empty($conf['stream'])) {
             $this->_stream = $conf['stream'];
+        } elseif (defined('STDOUT')) {
+            $this->_stream = STDOUT;
+        } else {
+            $this->_stream = fopen('php://output', 'a');
+            $this->_closeResource = true;
         }
 
         if (isset($conf['buffering'])) {
@@ -130,6 +142,9 @@ class Log_console extends Log
     {
         $this->flush();
         $this->_opened = false;
+        if ($this->_closeResource === true && is_resource($this->_stream)) {
+            fclose($this->_stream);
+        }
         return true;
     }
 
@@ -149,7 +164,7 @@ class Log_console extends Log
             fwrite($this->_stream, $this->_buffer);
             $this->_buffer = '';
         }
- 
+
         if (is_resource($this->_stream)) {
             return fflush($this->_stream);
         }
@@ -160,7 +175,7 @@ class Log_console extends Log
     /**
      * Writes $message to the text console. Also, passes the message
      * along to any Log_observer instances that are observing this Log.
-     * 
+     *
      * @param mixed  $message    String or object containing the message to log.
      * @param string $priority The priority of the message.  Valid
      *                  values are: PEAR_LOG_EMERG, PEAR_LOG_ALERT,
@@ -204,5 +219,4 @@ class Log_console extends Log
 
         return true;
     }
-
 }

@@ -1,8 +1,8 @@
 <?php
 /**
- * $Header: /repository/pear/Log/Log/daemon.php,v 1.3 2008/01/19 22:12:16 jon Exp $
+ * $Header$
  *
- * @version $Revision: 1.3 $
+ * @version $Revision$
  * @package Log
  */
 
@@ -12,7 +12,7 @@
  * This class uses the syslog protocol: http://www.ietf.org/rfc/rfc3164.txt
  *
  * @author  Bart van der Schans <schans@dds.nl>
- * @version $Revision: 1.3 $
+ * @version $Revision$
  * @package Log
  */
 class Log_daemon extends Log
@@ -61,25 +61,24 @@ class Log_daemon extends Log
      */
     var $_timeout = 1;
 
-
     /**
      * Constructs a new syslog object.
      *
-     * @param string $name     The syslog facility.
-     * @param string $ident    The identity string.
-     * @param array  $conf     The configuration array.
-     * @param int    $maxLevel Maximum level at which to log.
+     * @param string $name  The syslog facility.
+     * @param string $ident The identity string.
+     * @param array  $conf  The configuration array.
+     * @param int    $level Maximum level at which to log.
      * @access public
      */
-    function Log_daemon($name, $ident = '', $conf = array(),
-                        $level = PEAR_LOG_DEBUG)
+    public function __construct($name, $ident = '', $conf = array(),
+                                $level = PEAR_LOG_DEBUG)
     {
         /* Ensure we have a valid integer value for $name. */
         if (empty($name) || !is_int($name)) {
             $name = LOG_SYSLOG;
         }
 
-        $this->_id = md5(microtime());
+        $this->_id = md5(microtime().rand());
         $this->_name = $name;
         $this->_ident = $ident;
         $this->_mask = Log::UPTO($level);

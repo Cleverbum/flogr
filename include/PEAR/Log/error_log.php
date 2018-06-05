@@ -1,8 +1,8 @@
 <?php
 /**
- * $Header: /repository/pear/Log/Log/error_log.php,v 1.8 2006/06/29 07:09:21 jon Exp $
+ * $Header$
  *
- * @version $Revision: 1.8 $
+ * @version $Revision$
  * @package Log
  */
 
@@ -41,18 +41,34 @@ class Log_error_log extends Log
     var $_extra_headers = '';
 
     /**
+     * String containing the format of a log line.
+     * @var string
+     * @access private
+     */
+    var $_lineFormat = '%2$s: %4$s';
+
+    /**
+     * String containing the timestamp format.  It will be passed directly to
+     * strftime().  Note that the timestamp string will generated using the
+     * current locale.
+     * @var string
+     * @access private
+     */
+    var $_timeFormat = '%b %d %H:%M:%S';
+
+    /**
      * Constructs a new Log_error_log object.
      *
-     * @param string $name     Ignored.
+     * @param string $name     One of the PEAR_LOG_TYPE_* constants.
      * @param string $ident    The identity string.
      * @param array  $conf     The configuration array.
      * @param int    $level    Log messages up to and including this level.
      * @access public
      */
-    function Log_error_log($name, $ident = '', $conf = array(),
-                           $level = PEAR_LOG_DEBUG)
+    public function __construct($name, $ident = '', $conf = array(),
+                                $level = PEAR_LOG_DEBUG)
     {
-        $this->_id = md5(microtime());
+        $this->_id = md5(microtime().rand());
         $this->_type = $name;
         $this->_ident = $ident;
         $this->_mask = Log::UPTO($level);
@@ -60,8 +76,19 @@ class Log_error_log extends Log
         if (!empty($conf['destination'])) {
             $this->_destination = $conf['destination'];
         }
+
         if (!empty($conf['extra_headers'])) {
             $this->_extra_headers = $conf['extra_headers'];
+        }
+
+        if (!empty($conf['lineFormat'])) {
+            $this->_lineFormat = str_replace(array_keys($this->_formatMap),
+                                             array_values($this->_formatMap),
+                                             $conf['lineFormat']);
+        }
+
+        if (!empty($conf['timeFormat'])) {
+            $this->_timeFormat = $conf['timeFormat'];
         }
     }
 
@@ -116,8 +143,14 @@ class Log_error_log extends Log
         /* Extract the string representation of the message. */
         $message = $this->_extractMessage($message);
 
-        $success = error_log($this->_ident . ': ' . $message, $this->_type,
-                             $this->_destination, $this->_extra_headers);
+        /* Build the string containing the complete log line. */
+        $line = $this->_format($this->_lineFormat,
+                               strftime($this->_timeFormat),
+                               $priority, $message);
+
+        /* Pass the log line and parameters to the error_log() function. */
+        $success = error_log($line, $this->_type, $this->_destination,
+                             $this->_extra_headers);
 
         $this->_announce(array('priority' => $priority, 'message' => $message));
 

@@ -1,9 +1,9 @@
 <?php
 /**
- * $Header: /repository/pear/Log/Log/syslog.php,v 1.25 2007/01/29 05:09:07 jon Exp $
+ * $Header$
  * $Horde: horde/lib/Log/syslog.php,v 1.6 2000/06/28 21:36:13 jon Exp $
  *
- * @version $Revision: 1.25 $
+ * @version $Revision$
  * @package Log
  */
 
@@ -38,6 +38,38 @@ class Log_syslog extends Log
     var $_inherit = false;
 
     /**
+     * Should we re-open the syslog connection for each log event?
+     * @var boolean
+     * @access private
+     */
+    var $_reopen = false;
+
+    /**
+     * Maximum message length that will be sent to syslog().  If the handler
+     * receives a message longer than this length limit, it will be split into
+     * multiple syslog() calls.
+     * @var integer
+     * @access private
+     */
+    var $_maxLength = 500;
+
+    /**
+     * String containing the format of a message.
+     * @var string
+     * @access private
+     */
+    var $_lineFormat = '%4$s';
+
+    /**
+     * String containing the timestamp format.  It will be passed directly to
+     * strftime().  Note that the timestamp string will generated using the
+     * current locale.
+     * @var string
+     * @access private
+     */
+    var $_timeFormat = '%b %d %H:%M:%S';
+
+    /**
      * Constructs a new syslog object.
      *
      * @param string $name     The syslog facility.
@@ -46,8 +78,8 @@ class Log_syslog extends Log
      * @param int    $level    Log messages up to and including this level.
      * @access public
      */
-    function Log_syslog($name, $ident = '', $conf = array(),
-                        $level = PEAR_LOG_DEBUG)
+    public function __construct($name, $ident = '', $conf = array(),
+                                $level = PEAR_LOG_DEBUG)
     {
         /* Ensure we have a valid integer value for $name. */
         if (empty($name) || !is_int($name)) {
@@ -58,8 +90,22 @@ class Log_syslog extends Log
             $this->_inherit = $conf['inherit'];
             $this->_opened = $this->_inherit;
         }
+        if (isset($conf['reopen'])) {
+            $this->_reopen = $conf['reopen'];
+        }
+        if (isset($conf['maxLength'])) {
+            $this->_maxLength = $conf['maxLength'];
+        }
+        if (!empty($conf['lineFormat'])) {
+            $this->_lineFormat = str_replace(array_keys($this->_formatMap),
+                                             array_values($this->_formatMap),
+                                             $conf['lineFormat']);
+        }
+        if (!empty($conf['timeFormat'])) {
+            $this->_timeFormat = $conf['timeFormat'];
+        }
 
-        $this->_id = md5(microtime());
+        $this->_id = md5(microtime().rand());
         $this->_name = $name;
         $this->_ident = $ident;
         $this->_mask = Log::UPTO($level);
@@ -72,7 +118,7 @@ class Log_syslog extends Log
      */
     function open()
     {
-        if (!$this->_opened) {
+        if (!$this->_opened || $this->_reopen) {
             $this->_opened = openlog($this->_ident, LOG_PID, $this->_name);
         }
 
@@ -118,8 +164,8 @@ class Log_syslog extends Log
             return false;
         }
 
-        /* If the connection isn't open and can't be opened, return failure. */
-        if (!$this->_opened && !$this->open()) {
+        /* If we need to (re)open the connection and open() fails, abort. */
+        if ((!$this->_opened || $this->_reopen) && !$this->open()) {
             return false;
         }
 
@@ -127,13 +173,26 @@ class Log_syslog extends Log
         $message = $this->_extractMessage($message);
 
         /* Build a syslog priority value based on our current configuration. */
-        $priority = $this->_toSyslog($priority);
+        $syslogPriority = $this->_toSyslog($priority);
         if ($this->_inherit) {
-            $priority |= $this->_name;
+            $syslogPriority |= $this->_name;
         }
 
-        if (!syslog($priority, $message)) {
+        /* Apply the configured line format to the message string. */
+        $message = $this->_format($this->_lineFormat,
+                                  strftime($this->_timeFormat),
+                                  $priority, $message);
+
+        /* Split the string into parts based on our maximum length setting. */
+        $parts = str_split($message, $this->_maxLength);
+        if ($parts === false) {
             return false;
+        }
+
+        foreach ($parts as $part) {
+            if (!syslog($syslogPriority, $part)) {
+                return false;
+            }
         }
 
         $this->_announce(array('priority' => $priority, 'message' => $message));

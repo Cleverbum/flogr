@@ -1,9 +1,9 @@
 <?php
 /**
- * $Header: /repository/pear/Log/Log/observer.php,v 1.18 2006/04/25 06:02:23 jon Exp $
+ * $Header$
  * $Horde: horde/lib/Log/observer.php,v 1.5 2000/06/28 21:36:13 jon Exp $
  *
- * @version $Revision: 1.18 $
+ * @version $Revision$
  * @package Log
  */
 
@@ -47,9 +47,9 @@ class Log_observer
      *
      * @access public
      */
-    function Log_observer($priority = PEAR_LOG_INFO)
+    public function __construct($priority = PEAR_LOG_INFO)
     {
-        $this->_id = md5(microtime());
+        $this->_id = md5(microtime().rand());
         $this->_priority = $priority;
     }
 
@@ -78,7 +78,7 @@ class Log_observer
          * instance.
          */
         if (class_exists($class)) {
-            $object = &new $class($priority, $conf);
+            $object = new $class($priority, $conf);
             return $object;
         }
 
@@ -102,9 +102,9 @@ class Log_observer
         if (class_exists($class)) {
             /* Support both new-style and old-style construction. */
             if ($newstyle) {
-                $object = &new $class($priority, $conf);
+                $object = new $class($priority, $conf);
             } else {
-                $object = &new $class($priority);
+                $object = new $class($priority);
             }
             return $object;
         }

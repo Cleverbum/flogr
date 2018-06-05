@@ -1,8 +1,8 @@
 <?php
 /**
- * $Header: /repository/pear/Log/Log/firebug.php,v 1.6 2008/01/19 21:56:16 jon Exp $
+ * $Header$
  *
- * @version $Revision: 1.6 $
+ * @version $Revision$
  * @package Log
  */
 
@@ -78,10 +78,10 @@ class Log_firebug extends Log
      * @param int    $level    Log messages up to and including this level.
      * @access public
      */
-    function Log_firebug($name = '', $ident = 'PHP', $conf = array(),
-                         $level = PEAR_LOG_DEBUG)
+    public function __construct($name = '', $ident = 'PHP', $conf = array(),
+                                $level = PEAR_LOG_DEBUG)
     {
-        $this->_id = md5(microtime());
+        $this->_id = md5(microtime().rand());
         $this->_ident = $ident;
         $this->_mask = Log::UPTO($level);
         if (isset($conf['buffering'])) {
@@ -142,7 +142,7 @@ class Log_firebug extends Log
     function flush() {
         if (count($this->_buffer)) {
             print '<script type="text/javascript">';
-            print "\nif (('console' in window) && ('firebug' in console)) {\n";
+            print "\nif ('console' in window) {\n";
             foreach ($this->_buffer as $line) {
                 print "  $line\n";
             }
@@ -179,27 +179,21 @@ class Log_firebug extends Log
         /* Extract the string representation of the message. */
         $message = $this->_extractMessage($message);
         $method  = $this->_methods[$priority];
-        
-        /* normalize line breaks */
-        $message = str_replace("\r\n", "\n", $message);
-        
-        /* escape line breaks */
-        $message = str_replace("\n", "\\n\\\n", $message);
-        
-        /* escape quotes */
-        $message = str_replace('"', '\\"', $message);
-        
+
+        /* normalize line breaks and escape quotes*/
+        $message = preg_replace("/\r?\n/", "\\n", addslashes($message));
+
         /* Build the string containing the complete log line. */
         $line = $this->_format($this->_lineFormat,
                                strftime($this->_timeFormat),
-                               $priority, 
+                               $priority,
                                $message);
 
         if ($this->_buffering) {
             $this->_buffer[] = sprintf('console.%s("%s");', $method, $line);
         } else {
             print '<script type="text/javascript">';
-            print "\nif (('console' in window) && ('firebug' in console)) {\n";
+            print "\nif ('console' in window) {\n";
             /* Build and output the complete log line. */
             printf('  console.%s("%s");', $method, $line);
             print "\n}\n";
@@ -210,5 +204,4 @@ class Log_firebug extends Log
 
         return true;
     }
-
 }
