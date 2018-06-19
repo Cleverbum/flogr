@@ -24,8 +24,7 @@
  * 	Provide both your user and group ids and flogr will show only the photos 
  * 	you have posted to the given group.
  */
-OPTIONAL_SETTING('FLICKR_USER_ID',  '95137114@N00');
-OPTIONAL_SETTING('FLICKR_GROUP_ID', '');
+OPTIONAL_SETTING('FLICKR_USER_ID',  '7394337@N06');
 //OPTIONAL_SETTING('FLICKR_USER_ID',  '');
 //OPTIONAL_SETTING('FLICKR_GROUP_ID', '82648219@N00');
 

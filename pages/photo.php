@@ -1,127 +1,160 @@
 <?php
-
 require_once( 'page.php' );
 
 class Flogr_Photo extends Flogr_Page {
 
+    var $photoId;
     var $info;
     var $licenses;
     var $comments;
     var $exif;
-
-    function get_photos(
-    $tags = null, $sort = null, $extras = null, $perPage = null, $page = null) {
+    var $geoLocation;
+    var $context;
+    var $sizes;
+    
+    function get_user_photos(
+    $userId = null,
+        $tags = null,
+        $sort = null,
+        $extras = null,
+        $perPage = null,
+        $page = null ) {
         $p = new Profiler();
         $photoSearchParams = array(
-            "user_id" => FLICKR_USER_ID,
-            "group_id" => FLICKR_GROUP_ID,
-            "tags" => $tags ? $tags : $this->paramTags,
-            "sort" => $sort ? $sort : $this->paramSort,
-            "extras" => $extras ? $extras : FLOGR_PHOTO_EXTRAS,
-            "per_page" => $perPage ? $perPage : $this->paramPerPage,
-            "page" => $page ? $page : $this->paramPage);
+          "user_id"=>$userId ? $userId : $this->getconst('FLICKR_USER_ID'), 
+          "tags"=>$tags ? $tags : $this->paramTags, 
+          "sort"=>$sort ? $sort : $this->paramSort,
+          "extras"=>$extras ? $extras : 'original_format,date_taken,date_upload', 
+          "per_page"=>$perPage ? $perPage : $this->paramPerPage, 
+          "page"=>$page ? $page : $this->paramPage);
 
-        $this->photoList = $this->phpFlickr->photos_search($photoSearchParams);
+        $this->photoList = $this->PhpFlickr->photos_search( $photoSearchParams );
         return $this->photoList;
     }
-
-    function get_photo($photoId = null) {
-        $p = new Profiler();
-        $photoId = $photoId ? $photoId : $this->paramPhotoId;
-
-        if (!$this->photoList || $this->photoList["photo"][0]["id"] != $photoId) {
-            if ($photoId) {
-                /*
-                 * If passed a photoId use flickr.photos.getInfo to get the photo's
-                 * title and date taken, then pass those values on to flickr.photos.search
-                 * to get the base $photo properties
-                 */
-                $this->info = $this->get_photo_info($photoId);
-                $userId = $this->info["owner"]["nsid"];
-                $photoSearchParams = array(
-                    "user_id" => $userId,
-                    "group_id" => FLICKR_GROUP_ID,
-                    "min_taken_date" => $this->info["dates"]["taken"],
-                    "max_taken_date" => $this->info["dates"]["taken"],
-                    "sort" => $this->paramSort,
-                    "extras" => FLOGR_PHOTO_EXTRAS,
-                    "per_page" => 1,
-                    "page" => $this->paramPage);
-
-                $this->photoList = $this->phpFlickr->photos_search($photoSearchParams);
-            } else {
-                // Get the first photo from the user and/or group using the defaults.
-                $this->photoList = $this->photoList ? $this->photoList : $this->get_photos(null, null, null, 2, null);
+    
+    function user_photos(
+        $userId = null,
+        $tags = null,
+        $sort = null,
+        $extras = null,
+        $perPage = null,
+        $page = null ) {
+            $p = new Profiler();
+            echo $photos = $this->get_user_photos($userId, $tags, $sort, $extras, $perPage, $page);
+    }
+    
+    function get_user_favorite_photos( 
+        $userId = null,
+        $extras = null,
+        $perPage = null,
+        $page = null ) {
+            $p = new Profiler();            
+            $this->photoList = $this->PhpFlickr->favorites_getPublicList(
+            $user ? $user : $this->getconst('FLICKR_USER_ID'),
+            $extras ? $extras : FLOGR_PHOTO_EXTRAS, 
+            $perPage ? $perPage : $this->paramPerPage,
+            $page ? $page : $this->paramPage);
+            return $this->photoList;
+    }
+    
+    function user_favorite_photos( 
+        $userId = null,
+        $extras = null,
+        $perPage = null,
+        $page = null ) {
+            $p = new Profiler();
+            echo $this->get_user_favorite_photos($userId, $extras, $perPage, $page);
+    }
+    
+    function get_group_photos( 
+        $groupId = null, 
+        $tags = null, 
+        $userId = null, 
+        $extras = null,
+        $perPage = null, 
+        $page = null ) {
+        	$p = new Profiler();        
+        	$this->photoList = $this->PhpFlickr->groups_pools_getPhotos(
+             $groupId ? $groupId : $this->getconst('FLICKR_GROUP_ID'),
+             $tags ? $tags : $this->paramTags,
+             $userId ? $userId : $this->getconst('FLICKR_USER_ID'),
+             $extras ? $extras : $this->getconst('FLOGR_PHOTO_EXTRAS'), 
+             $perPage ? $perPage : $this->paramPerPage,
+             $page ? $page : $this->paramPage);
+    		return $this->photoList;
+    }
+    
+    function group_photos( 
+        $groupId = null, 
+        $tags = null, 
+        $userId = null, 
+        $extras = null,
+        $perPage = null, 
+        $page = null ) {
+        	$p = new Profiler();        	
+            echo $this->get_group_photos($groupId, $tags, $userId, $extras, $perPage, $page);
+    }
+    
+    function get_user_interestingness_photos( 
+        $date = null,
+        $extras = null,
+        $perPage = null,
+        $page = null) {
+        	$p = new Profiler();        	
+        	$this->photoList = $this->PhpFlickr->interestingness_getList(
+            $date,
+            $extras ? $extras : FLOGR_PHOTO_EXTRAS,
+            $perPage ? $perPage : $this->paramPerPage,
+            $page ? $page : $this->paramPage);
+      		return $this->photoList;
+    }
+    
+    function user_interestingness_photos( 
+        $date = null,
+        $extras = null,
+        $perPage = null,
+        $page = null) {
+    		$p = new Profiler();
+        	echo $this->get_user_interestingness_photos($date, $extras, $perPage, $page);
+    }
+    
+    /**
+     * Enter description here...
+     *
+     * @return unknown
+     */
+    
+    function get_photos() {
+    	$p = new Profiler();
+    	$photos = null;
+    	if ( defined('FLICKR_GROUP_ID') ) {
+        	$photos = $this->get_group_photos();
+            if ( $photos ) $this->photoId = $photos['photo'][0]['id'];
+        } else if ( defined('FLICKR_USER_ID') ) {
+        	$photos = $this->get_user_photos();                
+            if ( $photos ) $this->photoId = $photos['photo'][0]['id'];
+        }
+        return $photos;
+    }
+    
+    function get_photo_id() {
+    	$p = new Profiler();
+    	if ( !$this->photoId ) {
+            if ( $this->paramPhotoId ) {
+                $this->photoId = $this->paramPhotoId;
+            }
+            else if ( defined('FLICKR_GROUP_ID') ) {
+                // get first group photo
+                $photos = $this->get_group_photos( null, FLOGR_TAGS_INCLUDE, null, '1', '1' );
+                if ( $photos ) $this->photoId = $photos['photo'][0]['id'];
+            }
+            else if ( defined('FLICKR_USER_ID') ) {
+                $photos = $this->get_user_photos( null, FLOGR_TAGS_INCLUDE, null, '1', '1' );                
+                if ( $photos ) $this->photoId = $photos['photo'][0]['id'];
             }
         }
-        
-        return $this->photoList["photo"][0];
-    }
-
-    function photos(
-    $userId = null, $tags = null, $sort = null, $extras = null, $perPage = null, $page = null) {
-        $p = new Profiler();
-        echo $photos = $this->get_photos($userId, $tags, $sort, $extras, $perPage, $page);
-    }
-
-    function get_photos_with_geo_data(
-    $tags = null, $sort = null, $extras = null, $perPage = null, $page = null) {
-        $p = new Profiler();
-        $photoSearchParams = array(
-            "has_geo" => "1",
-            "user_id" => FLICKR_USER_ID,
-            "group_id" => FLICKR_GROUP_ID,
-            "tags" => $tags ? $tags : $this->paramTags,
-            "sort" => $sort ? $sort : $this->paramSort,
-            "extras" => $extras ? $extras : FLOGR_PHOTO_EXTRAS);
-        $this->photoList = $this->phpFlickr->photos_search($photoSearchParams);
-        return $this->photoList;
-    }
-
-    function get_user_favorite_photos(
-    $userId = null, $extras = null, $perPage = null, $page = null) {
-        $p = new Profiler();
-        $this->photoList = $this->phpFlickr->favorites_getPublicList(
-                        $user ? $user : FLICKR_USER_ID,
-                        $extras ? $extras : FLOGR_PHOTO_EXTRAS,
-                        $perPage ? $perPage : $this->paramPerPage,
-                        $page ? $page : $this->paramPage);
-        return $this->photoList;
-    }
-
-    function user_favorite_photos(
-    $userId = null, $extras = null, $perPage = null, $page = null) {
-        $p = new Profiler();
-        echo $this->get_user_favorite_photos($userId, $extras, $perPage, $page);
-    }
-
-    function get_user_interestingness_photos(
-    $date = null, $extras = null, $perPage = null, $page = null) {
-        $p = new Profiler();
-        $this->photoList = $this->phpFlickr->interestingness_getList(
-                        $date,
-                        $extras ? $extras : FLOGR_PHOTO_EXTRAS,
-                        $perPage ? $perPage : $this->paramPerPage,
-                        $page ? $page : $this->paramPage);
-        return $this->photoList;
-    }
-
-    function user_interestingness_photos(
-    $date = null, $extras = null, $perPage = null, $page = null) {
-        $p = new Profiler();
-        echo $this->get_user_interestingness_photos($date, $extras, $perPage, $page);
-    }
-
-    function get_photo_id() {
-        $p = new Profiler();
-        if ($this->paramPhotoId) {
-            return $this->paramPhotoId;
-        } else if ($this->photoList) {
-            return $this->photoList["photo"][0]["id"];
-        } else {
-            $photo = $this->get_photo();
-            return $photo["id"];
-        }
+         
+        return $this->photoId;
     }
 
     /**
@@ -130,11 +163,11 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_photo_info($photoId = null) {
-        $p = new Profiler();
+    function get_photo_info( $photoId = null ) {
+    	$p = new Profiler();
         $photoId = $photoId ? $photoId : $this->get_photo_id();
-        if (!$this->info || !$this->info["id"] != $photoId) {
-            $this->info = $this->phpFlickr->photos_getInfo($photoId);
+        if (!$this->info || $this->info['id'] != $photoId) {
+            $this->info = $this->PhpFlickr->photos_getInfo( $photoId );
         }
         return $this->info;
     }
@@ -145,10 +178,10 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_username($photoId = null) {
-        $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        return $photo["ownername"];
+    function get_username( $photoId = null) {
+    	$p = new Profiler();
+    	$info = $this->get_photo_info( $photoId );
+        return $info['owner']['username'];
     }
 
     /**
@@ -156,26 +189,9 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      */
-    function username($photoId = null) {
+    function username( $photoId = null ) {
         $p = new Profiler();
-        echo $this->get_username($photoId);
-    }
-
-    function get_userId($photoId = null) {
-        $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        return $photo["owner"];
-    }
-
-    function get_userlink($photoId = null) {
-        $p = new Profiler();
-        return "http://www.flickr.com/people/{$this->get_userId($photoId)}/";
-    }
-
-    function userlink($photoId = null, $inner = null) {
-        $p = new Profiler();
-        $inner = $inner ? $inner : $this->get_username($photoId);
-        echo "<a href='{$this->get_userlink($photoId)}'>{$inner}</a>";
+        echo $this->get_username( $photoId );
     }
 
     /**
@@ -184,9 +200,9 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_realname($photoId = null) {
+    function get_realname( $photoId = null) {
         $p = new Profiler();
-        $info = $this->get_photo_info($photoId);
+        $info = $this->get_photo_info( $photoId );
         return $info['owner']['realname'];
     }
 
@@ -195,9 +211,9 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      */
-    function realname($photoId = null) {
+    function realname( $photoId = null ) {
         $p = new Profiler();
-        echo $this->get_realname($photoId);
+        echo $this->get_realname( $photoId );
     }
 
     /**
@@ -206,9 +222,9 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_location($photoId = null) {
+    function get_location( $photoId = null) {
         $p = new Profiler();
-        $info = $this->get_photo_info($photoId);
+        $info = $this->get_photo_info( $photoId );
         return $info['owner']['location'];
     }
 
@@ -217,92 +233,149 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      */
-    function location($photoId = null) {
+    function location( $photoId = null ) {
         $p = new Profiler();
-        echo $this->get_location($photoId);
+        echo $this->get_location( $photoId );
     }
 
     /**
      * Enter description here...
      *
      * @param unknown_type $photoId
-     * @param unknown_type $this->phpFlickrormat
+     * @param unknown_type $this->PhpFlickrormat
      * @return unknown
      */
-    function get_dateposted($photoId = null, $format = null) {
+    function get_dateposted( $photoId = null, $format = null ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
+        $info = $this->get_photo_info( $photoId );
         $format = $format ? $format : FLOGR_DATE_FORMAT;
-        return date($format, $photo["dateupload"]);
+        return date( $format, $info['dates']['posted'] );
     }
 
     /**
      * Enter description here...
      *
      * @param unknown_type $photoId
-     * @param unknown_type $this->phpFlickrormat
+     * @param unknown_type $this->PhpFlickrormat
      */
-    function dateposted($photoId = null, $format = null) {
+    function dateposted( $photoId = null, $format = null ) {
         $p = new Profiler();
-        echo $this->get_dateposted($photoId, $format);
+        echo $this->get_dateposted( $photoId, $format );
     }
 
     /**
      * Enter description here...
      *
      * @param unknown_type $photoId
-     * @param unknown_type $this->phpFlickrormat
+     * @param unknown_type $this->PhpFlickrormat
      * @return unknown
      */
-    function get_datetaken($photoId = null, $format = null) {
+    function get_datetaken( $photoId = null, $format = null ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
+        $info = $this->get_photo_info( $photoId );
         $format = $format ? $format : FLOGR_DATE_FORMAT;
-        return date($format, $photo["datetaken"]);
+        return date( $format, strtotime( $info['dates']['taken'] ) );
     }
 
     /**
      * Enter description here...
      *
      * @param unknown_type $photoId
-     * @param unknown_type $this->phpFlickrormat
+     * @param unknown_type $this->PhpFlickrormat
      */
-    function datetaken($photoId = null, $format = null) {
+    function datetaken( $photoId = null, $format = null ) {
         $p = new Profiler();
-        echo $this->get_datetaken($photoId, $format);
+        echo $this->get_datetaken( $photoId, $format );
     }
 
-    function get_exif($photoId = null) {
+    /**
+     * Enter description here...
+     *
+     * @return unknown
+     */
+    function get_licenses() {
+        $p = new Profiler();
+        if ( !$this->licenses ) {
+            $this->licenses = $this->PhpFlickr->photos_licenses_getInfo();
+        }
+         
+        return $this->licenses;
+    }
+
+    /**
+     * Enter description here...
+     *
+     * @param unknown_type $photoId
+     * @return unknown
+     */
+    function get_comments( $photoId = null ) {
         $p = new Profiler();
         $photoId = $photoId ? $photoId : $this->get_photo_id();
-
-        if (!$this->exif) {
-            $this->exif = $this->phpFlickr->photos_getExif($photoId);
+         
+        if ( !$this->comments || $this->comments['photo_id'] != $photoId ) {
+            $this->comments = $this->PhpFlickr->photos_comments_getList( $photoId );
         }
 
+        return $this->comments;
+    }
+
+    /**
+     * Enter description here...
+     *
+     * @param unknown_type $photoId
+     * @return unknown
+     */
+    function get_sizes( $photoId = null ) {
+        $p = new Profiler();
+        $photoId = $photoId ? $photoId : $this->get_photo_id();
+        
+        /**
+         * HACK: Trying to not make additional calls if we already have the size
+         * for this photo id.
+         */
+        if ( !$this->sizes || !strstr($this->sizes[0]['url'], $photoId) ) {
+        	$this->sizes = $this->PhpFlickr->photos_getSizes( $photoId );
+        }
+                
+        return $this->sizes;
+    }
+
+    function get_exif( $photoId = null ) {
+        $p = new Profiler();
+        $photoId = $photoId ? $photoId : $this->get_photo_id();
+         
+        if ( !$this->exif || $this->exif['photo']['id'] != $photoId ) {
+            $this->exif = $this->PhpFlickr->photos_getExif( $photoId );
+        }
+        
         return $this->exif;
     }
 
-    function exif($photoId = null) {
+    function exif( $photoId = null ) {
         $p = new Profiler();
-        $exif = $this->get_exif($photoId);
+        $exif = $this->get_exif( $photoId );
         $exifData = null;
-        if ($exif['exif']) {
-            foreach ($exif['exif'] as $exifItem) {
-                if (stristr(FLOGR_EXIF, $exifItem['label']) && !stristr($exifData, $exifItem['label'])) {
+        if ( $exif['exif'] ) {
+            foreach ($exif['exif'] as $exifItem) 
+            {
+                if (stristr(FLOGR_EXIF, $exifItem['label']))
+                {
                     $exifData .= "<tr>";
                     $exifData .= "<td>" . $exifItem['label'] . "</td>";
                     if ($exifItem['clean']) {
-                        $exifData .= "<td>" . $exifItem['clean'] . "</td>";
-                    } else {
+                        $exifData .= "<td>" . $exifItem['clean'] . "</td>";      
+                    }
+                    else {
                         $exifData .= "<td>" . $exifItem['raw'] . "</td>";
                     }
                     $exifData .= "</tr>";
                 }
             }
-            echo "<table class='table'>$exifData</table>";
+            $geo = $this->get_geo_location( $photoId );
+            if ($geo) $exifData .= "<tr><td>Location</td><td>" . $this->get_geo_location_link( $photoId ) . "</td></tr>";
+            echo "<table>$exifData</table>";
         }
-    }
+    }    
 
     /**
      * Enter description here...
@@ -310,9 +383,9 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_is_favorite($photoId = null, $truetext = 'Y', $falsetext = 'N') {
+    function get_is_favorite( $photoId = null, $truetext = 'Y', $falsetext = 'N' ) {
         $p = new Profiler();
-        $info = $this->get_photo_info($photoId);
+        $info = $this->get_photo_info( $photoId );
         if ($info['isfavorite']) {
             return $truetext;
         } else {
@@ -325,9 +398,9 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      * @param unknown_type $truetext
-     * @param unknown_type $this->phpFlickralsetext
+     * @param unknown_type $this->PhpFlickralsetext
      */
-    function is_favorite($photoId = null, $truetext = 'Y', $falsetext = 'N') {
+    function is_favorite( $photoId = null, $truetext = 'Y', $falsetext = 'N' ) {
         $p = new Profiler();
         echo $this->get_is_favorite($photoId, $truetext, $falsetext);
     }
@@ -335,28 +408,14 @@ class Flogr_Photo extends Flogr_Page {
     /**
      * Enter description here...
      *
-     * @return unknown
-     */
-    function get_licenses() {
-        $p = new Profiler();
-        if (!$this->licenses) {
-            $this->licenses = $this->phpFlickr->photos_licenses_getInfo();
-        }
-
-        return $this->licenses;
-    }
-
-    /**
-     * Enter description here...
-     *
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_license_name($photoId = null) {
+    function get_license_name( $photoId = null ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
         $licenses = $this->get_licenses();
-        return $licenses[$photo["license"]]["name"];
+        $info = $this->get_photo_info( $photoId );
+        return $licenses[$info['license']]['name'];
     }
 
     /**
@@ -364,9 +423,9 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      */
-    function license_name($photoId = null) {
+    function license_name( $photoId = null ) {
         $p = new Profiler();
-        echo $this->get_license_name($photoId);
+        echo $this->get_license_name( $photoId );
     }
 
     /**
@@ -376,11 +435,14 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $inner
      * @return unknown
      */
-    function get_license_link($photoId = null) {
+    function get_license_link( $photoId = null, $inner = null ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
         $licenses = $this->get_licenses();
-        return $licenses[$photo["license"]]["url"];
+        $info = $this->get_photo_info( $photoId );
+        $url = $licenses[$info['license']]['url'];
+        $inner = $inner ? $inner : $this->get_license_name( $photoId );
+
+        return "<a href='{$url}'>{$inner}</a>";
     }
 
     /**
@@ -389,10 +451,9 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @param unknown_type $inner
      */
-    function license_link($photoId = null, $inner = null) {
+    function license_link( $photoId = null, $inner = null ) {
         $p = new Profiler();
-        $inner = $inner ? $inner : $this->get_license_name($photoId);
-        echo "<a href='{$this->get_license_link($photoId)}'>{$inner}</a>";
+        echo $this->get_license_link( $photoId, $inner );
     }
 
     /**
@@ -401,10 +462,10 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_title($photoId = null) {
+    function get_title( $photoId = null ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        return htmlspecialchars($photo["title"], ENT_QUOTES);
+        $info = $this->get_photo_info( $photoId );
+        return htmlspecialchars( $info['title'], ENT_QUOTES );
     }
 
     /**
@@ -412,9 +473,9 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      */
-    function title($photoId = null) {
+    function title( $photoId = null ) {
         $p = new Profiler();
-        echo $this->get_title($photoId);
+        echo $this->get_title( $photoId );
     }
 
     /**
@@ -423,10 +484,10 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_description($photoId = null) {
+    function get_description( $photoId = null ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        return htmlspecialchars($photo["description"], ENT_QUOTES);
+        $info = $this->get_photo_info( $photoId );
+        return htmlspecialchars($info['description'], ENT_QUOTES);
     }
 
     /**
@@ -434,9 +495,9 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      */
-    function description($photoId = null) {
+    function description( $photoId = null ) {
         $p = new Profiler();
-        echo $this->get_description($photoId);
+        echo $this->get_description( $photoId );
     }
 
     /**
@@ -446,23 +507,12 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $inner
      * @return unknown
      */
-    function get_photopage_link($photoId = null) {
+    function get_photopage_link( $photoId = null, $inner = 'Photopage' ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        return "http://www.flickr.com/photos/{$photo['owner']}/{$photo['id']}/";
-    }
-
-    function get_permalink($photoId = null) {
-        $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        return SITE_URL . "/index.php?photoId={$this->get_photo_id($photoId)}";
-    }
-
-    function permalink($photoId = null, $inner = null) {
-        $p = new Profiler();
-        $inner = $inner ? $inner : $this->get_permalink($photoId);
-        ;
-        echo "<a href='{$this->get_permalink($photoId)}'>{$inner}</a>";
+        $info = $this->get_photo_info( $photoId );
+        $url = $info['urls']['url'][0]['_content'];
+         
+        return "<a href='{$url}'>{$inner}</a>";
     }
 
     /**
@@ -471,33 +521,9 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @param unknown_type $inner
      */
-    function photopage_link($photoId = null, $inner = null) {
+    function photopage_link( $photoId = null, $inner = 'Photopage' ) {
         $p = new Profiler();
-        $inner = $inner ? $inner : $this->get_photopage_link($photoId);
-        ;
-        echo "<a href='{$this->get_photopage_link($photoId)}'>{$inner}</a>";
-    }
-
-    function get_views_count($photoId = null) {
-        $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        return $photo["views"];
-    }
-
-    function views_count($photoId = null) {
-        $p = new Profiler();
-        echo $this->get_views_count();
-    }
-
-    function get_comments($photoId = null) {
-        $p = new Profiler();
-        $photoId = $photoId ? $photoId : $this->get_photo_id();
-
-        if (!$this->comments) {
-            $this->comments = $this->phpFlickr->photos_comments_getList($photoId);
-        }
-
-        return $this->comments;
+        echo $this->get_photopage_link( $photoId, $inner );
     }
 
     /**
@@ -506,10 +532,10 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $photoId
      * @return unknown
      */
-    function get_comments_count($photoId = null) {
+    function get_comments_count( $photoId = null ) {
         $p = new Profiler();
-        $comments = $this->get_comments($photoId);
-        return count($comments["comment"]);
+        $info = $this->get_photo_info( $photoId );
+        return $info['comments'];
     }
 
     /**
@@ -517,9 +543,9 @@ class Flogr_Photo extends Flogr_Page {
      *
      * @param unknown_type $photoId
      */
-    function comments_count($photoId = null) {
+    function comments_count( $photoId = null ) {
         $p = new Profiler();
-        echo $this->get_comments_count($photoId);
+        echo $this->get_comments_count( $photoId );
     }
 
     /**
@@ -532,26 +558,31 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $commentLink
      * @param unknown_type $buddyIcon
      * @return unknown
-     */
+     */    
     function get_comments_list(
-    $photoId = null, $before = '<li>', $sep = ' says:<br/>', $after = '</li>', $commentLink = 'true', $buddyIcon = 'true') {
+    $photoId = null,
+    $before = '<li>',
+    $sep = ' says:<br/>',
+    $after = '</li>',
+    $commentLink = 'true',
+    $buddyIcon = 'true' ) {
         $p = new Profiler();
-        $comments = $this->get_comments($photoId);
-        if ($comments['comment']) {
+        $comments = $this->get_comments( $photoId );
+        if ( $comments['comment'] ) {
             $comment_list = null;
-            foreach ($comments['comment'] as $comment) {
+            foreach ( $comments['comment'] as $comment ) {
                 $commentAuthor = "<a href='{$comment['permalink']}'><b>{$comment['authorname']}</b></a>";
                 $commentText = $comment['_content'];
                 $commentDate = "<br/><small>Posted on: " . date(FLOGR_DATE_FORMAT, $comment['datecreate']) . "</small>";
                 $comment_list .= $before . $commentAuthor . $sep . $commentText . $commentDate . $after;
-            }
+            }             
         }
-
-        if ($commentLink) {
-            $comment_list .= $this->get_photopage_link($photoId, "<br/>Leave a comment");
+        
+        if ( $commentLink ) {
+        	$comment_list .= $this->get_photopage_link( $photoId, "<br/>Leave a comment" );
         }
-
-
+        
+                 
         return $comment_list;
     }
 
@@ -565,22 +596,9 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $commentLink
      * @param unknown_type $buddyIcon
      */
-    function comments_list($photoId = null, $before = '<li>', $sep = ' says:<br/>', $after = '</li>', $commentLink = 'true', $buddyIcon = 'true') {
+    function comments_list( $photoId = null, $before = '<li>', $sep = ' says:<br/>', $after = '</li>', $commentLink = 'true', $buddyIcon = 'true' ) {
         $p = new Profiler();
-        echo $this->get_comments_list($photoId, $before, $sep, $after, $commentLink, $buddyIcon);
-    }
-
-    /**
-     * Enter description here ...
-     * @param unknown_type $photoId
-     * @param unknown_type $text
-     */
-    function comment_add($photoId = null, $text = null) {
-        $p = new Profiler();
-
-        $photoId = $photoId ? $photoId : $this->get_photo_id();
-
-        $this->phpFlickr->photos_comments_addComment($photoId, $text);
+        echo $this->get_comments_list( $photoId, $before, $sep, $after, $commentLink, $buddyIcon );
     }
 
     /**
@@ -591,16 +609,14 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $after
      * @return unknown
      */
-    function get_tags_list($photoId = null, $before = '<li>', $after = '</li>') {
+    function get_tags_list( $photoId = null, $before = '<li>', $after = '</li>' ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        $tok = strtok($photo["tags"], " ");
+        $info = $this->get_photo_info( $photoId );
         $tag_list = "";
-        while ($tok !== false) {
-            $tag_list .= "{$before}<a href='index.php?type=recent&tags={$tok}'>{$tok}</a>{$after}";
-            $tok = strtok(" ");
+        foreach ( $info['tags']['tag'] as $tag ) {
+            $tag_list .= "{$before}<a href='index.php?type=recent&tags={$tag['_content']}'>{$tag['_content']}</a>{$after}";
         }
-
+         
         return $tag_list;
     }
 
@@ -611,64 +627,14 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $before
      * @param unknown_type $after
      */
-    function tags_list($photoId = null, $before = '<li>', $after = '</li>') {
+    function tags_list( $photoId = null, $before = '<li>', $after = '</li>' ) {
         $p = new Profiler();
-        echo $this->get_tags_list($photoId, $before, $after);
+        echo $this->get_tags_list( $photoId, $before, $after );
     }
-
-    function get_img_src($photoId = null, $quality = FLOGR_PHOTO_QUALITY, $scaleSize = null) {
-        $photo = $this->get_photo($photoId);
-
-        switch (strtolower($quality)) {
-            case "square":
-                $src = $photo["url_sq"];
-                $height = $photo["height_sq"];
-                $width = $photo["width_sq"];
-                break;
-            case "thumbnail":
-                $src = $photo["url_t"];
-                $height = $photo["height_t"];
-                $width = $photo["width_t"];
-                break;
-            case "small":
-                $src = $photo["url_s"];
-                $height = $photo["height_s"];
-                $width = $photo["width_s"];
-                break;
-            case "medium640":
-                if ( $photo["url_z"] ) {
-                    $src = $photo["url_z"];
-                    $height = $photo["height_z"];
-                    $width = $photo["width_z"];
-                } else {
-                    $src = $photo["url_m"];
-                    $height = $photo["height_m"];
-                    $width = $photo["width_m"];
-                }
-                break;
-            case "medium":
-                $src = $photo["url_m"];
-                $height = $photo["height_m"];
-                $width = $photo["width_m"];
-                break;
-            case "large":
-                $src = $photo["url_l"];
-                $height = $photo["height_l"];
-                $width = $photo["width_l"];
-                break;
-            default: // Original or custom size
-                $src = $photo["url_o"];
-                $height = $photo["height_o"];
-                $width = $photo["width_o"];
-                break;
-        }
-
-        if ($scaleSize) {
-            $height *= $scaleSize / $width;
-            $width = $scaleSize;
-        }
-
-        return array("url" => $src, "height" => $height, "width" => $width);
+    
+    function tags( $photoId = null, $before = '', $after = ' ' ) {
+        $p = new Profiler();
+        echo $this->get_tags_list( $photoId, $before, $after );
     }
 
     /**
@@ -678,16 +644,42 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $size
      * @return unknown
      */
-    function get_img($photoId = null, $quality = FLOGR_PHOTO_QUALITY, $scaleSize = null) {
+    function get_img( $photoId = null, $quality = FLOGR_PHOTO_QUALITY, $scaleSize = null ) {
         $p = new Profiler();
-        $src = $this->get_img_src($photoId, $quality, $scaleSize);
-        $url = $src["url"];
-        $height = $src["height"];
-        $width = $src["width"];
+        
+        // build the photo url
+        $src = $this->PhpFlickr->buildPhotoURL( $this->get_photo_info( $photoId ), $quality );
+        
+        /**
+         * If $scaleSize is set scale the photo (maintaining 1:1 aspect ratio)
+         */
+        if ( $scaleSize ) {
+        	$sizes = $this->get_sizes();
+        	$size = 0;
+        	foreach ( $sizes as $size ) {
+        		if ( strtolower($size['label']) == strtolower($quality) ) break;        		
+        	}
+        	        	
+        	$width = $size['width'];
+        	$height = $size['height'];        	
+        	if ( $width > $height ) {
+        		$origWidth = $width;
+        		$width = $scaleSize;
+        		$height *= $scaleSize / $origWidth;
+        	} else if ( $height > $width ) {
+        		$origHeight = $height;
+        		$height = $scaleSize;
+        		$width *= $scaleSize / $origHeight;        		
+        	}
+        }
         $title = $this->get_title($photoId);
         $desc = $this->get_description($photoId);
+        
+        if ( $scaleSize ) {
+        	return "<img class='photo' src='{$src}' height='{$height}' width='{$width}' title='{$title}' rel='{$desc}'/>";
+        }
 
-        return "<img class='photo' src={$url} height='{$height}' width='{$width}' title='{$title}' rel='{$desc}'/>";
+        return "<img class='photo' src='{$src}' title='{$title}' rel='{$desc}'/>";
     }
 
     /**
@@ -697,29 +689,87 @@ class Flogr_Photo extends Flogr_Page {
      * @param unknown_type $quality
      * @param unknown_type $scaleSize
      */
-    function img($photoId = null, $quality = FLOGR_PHOTO_QUALITY, $scaleSize = null) {
+    function img( $photoId = null, $quality = FLOGR_PHOTO_QUALITY, $scaleSize = null ) {
         $p = new Profiler();
-        echo $this->get_img($photoId, $quality, $scaleSize);
+        echo $this->get_img( $photoId, $quality, $scaleSize );
     }
-
-    function add_comment($id = null, $comment = null) {
+    
+    function add_comment( $id = null, $comment = null ) {
         $p = new Profiler();
-        if ($id == null || $comment == null)
-            return;
-        $this->phpFlickr->photos_comments_addComment($id, $comment);
+        if ( $id == null || $comment == null ) return;
+        $this->PhpFlickr->photos_comments_addComment( $id, $comment );
     }
-
-    function get_geo_location($id = null) {
+    
+    function get_geo_location( $id = null ) {
         $p = new Profiler();
-        $photo = $this->get_photo($photoId);
-        $geo = array("latitude" => $photo["latitude"], "longitude" => $photo["longitude"], "accuracy" => $photo["accuracy"]);
-        if ($geo["latitude"] !== 0 && $geo["longitude"] !== 0) {
-            return $geo;
-        } else {
-            return null;
+        $id = $id ? $id : $this->get_photo_id();
+        if ( !$this->geoLocation || $this->getLocation['id'] != $id ) {
+            $this->geoLocation = $this->PhpFlickr->photos_geo_getLocation( $id );
+        }
+        return $this->geoLocation;
+    }
+    
+    function geo_location( $id = null ) {
+        $p = new Profiler();
+        $geoLocation = $this->get_geo_location( $id );
+        if ( $geoLocation ) {
+         echo "{$geoLocation['location']['latitude']},{$geoLocation['location']['longitude']}";        	
         }
     }
+    
+    function get_geo_location_link( $id = null ) {
+        $p = new Profiler();
+        $geoLocation = $this->get_geo_location( $id );
+        if ( $geoLocation ) {
+         $title = $this->get_title( $id );
+         $mapUrl = htmlspecialchars("http://maps.google.com/maps?q={$title}@{$geoLocation['location']['latitude']},{$geoLocation['location']['longitude']}", ENT_QUOTES);           
+         return "<a target='_blank' href='{$mapUrl}'>{$geoLocation['location']['latitude']},{$geoLocation['location']['longitude']}</a>";          
+        }
+    }
+    
+    function get_context( $id = null ) {
+        $p = new Profiler();
+        $id = $id ? $id : $this->get_photo_id();
+        if ( !$this->context || $this->context['id'] != $id ) {
+            $this->context = $this->PhpFlickr->photos_getContext( $id );
+        }
+        return $this->context;
+    }
+    
+    function get_previous_photo_id( $id = null ) {
+        $p = new Profiler();
+        $context = $this->get_context( $id );
+        return $context['prevphoto']['id'];
+    }
+    
+    function get_previous_photo_link( $id = null, $inner = 'prev' ) {
+    	$prevId = $this->get_previous_photo_id( $id );
+    	return "<a href='" . SITE_URL . "/index.php?photoId={$prevId}'>" . $inner . "</a>";
+    }
+    
+    function previous_photo_link( $id = null, $inner = 'prev' ) {
+    	echo $this->get_previous_photo_link( $id, $inner );
+    }
+        
+    function get_next_photo_id( $id = null ) {
+    	if ( !$this->photoId ) return;
+    	
+    	$p = new Profiler();
+        $context = $this->get_context( $id );
+        return $context['nextphoto']['id'];
+    }
 
+    function get_next_photo_link( $id = null, $inner = 'next' ) {
+    	if ( !$this->photoId ) return;
+    	
+    	$nextId = $this->get_next_photo_id( $id );
+    	return "<a href='" . SITE_URL . "/index.php?photoId={$nextId}'>" . $inner . "</a>";
+    }
+    
+    function next_photo_link( $id = null, $inner = 'next' ) {
+    	echo $this->get_next_photo_link( $id, $inner );
+    }
 }
-$photo = new Flogr_Photo();
 ?>
+
+<?php $photo = new Flogr_Photo(); ?>

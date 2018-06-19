@@ -1,14 +1,16 @@
 <?php
 /**
  * @author Mike Carruth <mikecarruth@gmail.com>
- * @version 2.5.7
+ * @modifications Martin Klefas
+ * @version 3.0.0
  * @package Flogr
- * @link http://flogr.googlecode.com
+ * @link https://github.com/Cleverbum/flogr
  */
 
 require_once('profiler.php');
+require_once '../admin/private-config.php';
 
-define('FLOGR_FLICKR_API_KEY',  '64735d606d8cc904a3f62d3ed56d56b9');
+
 define('FLOGR_SIZE',            'thumbnail');
 define('FLOGR_PER_PAGE',        5);
 define('FLOGR_PHOTO_EXTRAS',    'description, license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias, url_sq, url_t, url_s, url_m, url_z, url_l, url_o');
@@ -19,9 +21,10 @@ define('FLOGR_PHOTO_EXTRAS',    'description, license, date_upload, date_taken, 
  * functionality.
  *
  * @author Mike Carruth <mikecarruth@gmail.com>
- * @version 2.5.7
+ * @modifications Martin Klefas
+ * @version 3.0.0
  * @package Flogr
- * @link http://flogr.googlecode.com
+ * @link https://github.com/Cleverbum/flogr
  */
 class Flogr_Page {
     var $paramPage;
@@ -37,7 +40,7 @@ class Flogr_Page {
     function Flogr_Page() {
         
         if (!$this->phpFlickr) {
-            $this->phpFlickr = new phpFlickr(FLOGR_FLICKR_API_KEY);
+            $this->phpFlickr = new \Samwilson\PhpFlickr\phpFlickr(FLOGR_FLICKR_API_KEY);
             //$this->phpFlickr->setProxy('157.54.108.18', 80);
             
             if (CACHE_SQL_USER && 
@@ -134,8 +137,8 @@ class Flogr_Page {
         $thumbs = null;
         $photos = $photos ? $photos : $photoList;
 
-        if ( $photos['photo'] ) {
-            foreach ($photos['photo'] as $photo) {
+        if ( $photos['photoset']['photo'] ) {
+            foreach ($photos['photoset']['photo'] as $photo) {
                 if ( FLOGR_SHOW_DATE_TAKEN && isset( $photo['datetaken'] ) ) {
                     $date = date( FLOGR_DATE_FORMAT, strtotime( $photo['datetaken'] ) );
                 }
@@ -170,8 +173,8 @@ class Flogr_Page {
         $title = null;
     	  $photos = $photos ? $photos : $photoList;
         
-        if ( $photos['photo'] ) {
-            foreach ($photos['photo'] as $photo) {
+        if ( $photos['photoset']['photo'] ) {
+            foreach ($photos['photoset']['photo'] as $photo) {
                 if ( FLOGR_SHOW_DATE_TAKEN && isset( $photo['datetaken'] ) ) {
                     $date = date( FLOGR_DATE_FORMAT, strtotime( $photo['datetaken'] ) );
                 }

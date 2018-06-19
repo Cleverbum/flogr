@@ -2,9 +2,9 @@
 flogr - Customizable photo gallery for photos hosted on Flickr
 
     Author: Mike Carruth (mikecarruth [at] google [dot] com
-  Homepage: https://github.com/mcarruth/flogr
- Demos: http://flogr.mikecarruth.org/ or https://github.com/mcarruth/flogr/wiki/flogr-Galleries
- 
+	Modification: Martin Klefas
+    Homepage: https://github.com/Cleverbum/flogr
+    Demos: http://jpgme.co.uk 
 ===============================================================================
 
 ---------------------------------------------------------------------
@@ -19,6 +19,18 @@ flogr - Customizable photo gallery for photos hosted on Flickr
   but don't want to hack blog software or upload the same pictures 
   multiple times (to flickr and pixelpost for example) then flogr 
   may be what you're after.
+
+  
+---
+Why Version 3
+---
+
+ Mike Carruth made the first two versions, before becoming busy with 
+ other projects the inexorable march of time meant that updates were
+ needed, in order to maintain even basic functionality.
+ This is the result of this need.
+ 
+ 
 
 ---------------------------------------------------------------------
  Features

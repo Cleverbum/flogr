@@ -1,0 +1,4 @@
+<?php
+define('FLOGR_FLICKR_API_KEY',  'YOUR API KEY');
+define('FLOGR_FLICKR_API_SECRET', 'YOUR API SECRET');
+?>

@@ -33,32 +33,28 @@ function OPTIONAL_SETTING($name, $value) {
 /**
  * Decides which include path delimiter to use.  Windows should be using a semi-colon
  * and everything else should be using a colon.  If this isn't working on your system,
- * comment out this if statement and manually set the correct value into $path_delimiter.
+ * comment out this if statement and manually set the correct value into PATH_SEPARATOR.
  */
-if (strpos(__FILE__, ':') !== false) {
-    $path_delimiter = ';';
-} else {
-    $path_delimiter = ':';
-}
 
 ini_set('include_path',
-        dirname(__FILE__) . '/../include/PEAR' . $path_delimiter .
-        dirname(__FILE__) . '/../include/phpFlickr-2.1.0' . $path_delimiter .
-        dirname(__FILE__) . '/../admin' . $path_delimiter .
-        dirname(__FILE__) . '/../pages' . $path_delimiter .
+        dirname(__FILE__) . '/../include/PEAR' . PATH_SEPARATOR .
+        #dirname(__FILE__) . '/../include/phpFlickr-2.1.0' . PATH_SEPARATOR .
+        dirname(__FILE__) . '/../admin' . PATH_SEPARATOR .
+        dirname(__FILE__) . '/../pages' . PATH_SEPARATOR .
         ini_get('include_path'));
 
 /**
  * Hide PHP warnings...nobody's perfect :)
  */
-error_reporting(E_ERROR);
+error_reporting(E_WARNING);
 
 /**
  * Includes
  */
-require_once('phpFlickr.php');
 require_once('Log.php');
 require_once('config.php');
+require_once dirname(__FILE__) .'/../include/vendor/autoload.php';
+
 
 /**
  * Create the flogr instance and let's get going
