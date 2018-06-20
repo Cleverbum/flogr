@@ -2,9 +2,10 @@
 
 /**
  * @author Mike Carruth <mikecarruth@gmail.com>
- * @version 2.5.7
+ * @modifications Martin Klefas
+ * @version 3.0.0
  * @package Flogr
- * @link http://mcarruth.github.io/flogr/
+ * @link https://github.com/Cleverbum/flogr
  */
 
 /**
@@ -30,15 +31,8 @@ function OPTIONAL_SETTING($name, $value) {
     define($name, $value, true);
 }
 
-/**
- * Decides which include path delimiter to use.  Windows should be using a semi-colon
- * and everything else should be using a colon.  If this isn't working on your system,
- * comment out this if statement and manually set the correct value into PATH_SEPARATOR.
- */
-
 ini_set('include_path',
         dirname(__FILE__) . '/../include/PEAR' . PATH_SEPARATOR .
-        #dirname(__FILE__) . '/../include/phpFlickr-2.1.0' . PATH_SEPARATOR .
         dirname(__FILE__) . '/../admin' . PATH_SEPARATOR .
         dirname(__FILE__) . '/../pages' . PATH_SEPARATOR .
         ini_get('include_path'));

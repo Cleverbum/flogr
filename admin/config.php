@@ -1,11 +1,11 @@
 <?php 
 /**
  * Flogr config settings 
- *
  * @author Mike Carruth <mikecarruth@gmail.com>
- * @version 2.5.7
+ * @modifications Martin Klefas
+ * @version 3.0.0
  * @package Flogr
- * @link http://mcarruth.github.io/flogr/
+ * @link https://github.com/Cleverbum/flogr
  */
 
 /**
@@ -25,7 +25,7 @@
  * 	you have posted to the given group.
  */
 OPTIONAL_SETTING('FLICKR_USER_ID',  '7394337@N06');
-//OPTIONAL_SETTING('FLICKR_USER_ID',  '');
+//OPTIONAL_SETTING('FLICKR_GROUP_ID', '16978849@N00');
 //OPTIONAL_SETTING('FLICKR_GROUP_ID', '82648219@N00');
 
 /**
@@ -35,7 +35,7 @@ REQUIRED_SETTING('SITE_TITLE',         'Flogr');
 REQUIRED_SETTING('SITE_DESCRIPTION',   'A photoblog application built on Flickr');
 REQUIRED_SETTING('SITE_THEME',         'blackstripe2');
 REQUIRED_SETTING('SITE_THEME_PATH',    'themes/' . SITE_THEME . '/');
-$url = "http://". $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT'] . $_SERVER['REQUEST_URI'];
+$url = "http://". $_SERVER['SERVER_NAME'] . ":12345" . $_SERVER['REQUEST_URI'];
 REQUIRED_SETTING('SITE_URL',           substr($url, 0, strrpos($url, "/")));
 
 /************************************************************************

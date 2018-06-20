@@ -416,7 +416,8 @@ class PhpFlickr
 
     public function buildPhotoURL($photo, $size = "Medium")
     {
-        //receives an array (can use the individual photo data returned
+        
+		//receives an array (can use the individual photo data returned
         //from an API call) and returns a URL (doesn't mean that the
         //file size exists)
         $sizes = array(

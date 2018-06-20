@@ -8,7 +8,7 @@
  */
 
 require_once('profiler.php');
-require_once '../admin/private-config.php';
+require_once 'private-config.php';
 
 
 define('FLOGR_SIZE',            'thumbnail');

@@ -132,7 +132,7 @@ class Flogr_Set extends Flogr_Page {
     	$inner = $inner ? $inner : $title; 
         $desc = htmlspecialchars($set['description'], ENT_QUOTES);
         $id = $set['id'];
-        $url = $this->phpFlickr->buildPhotoURL($set['id'], "Square");
+		
         $string =  "<a href='" . $_SERVER['PHP_SELF'] . "?type=sets&setId={$id}' title='' rev='{$title} | {$desc}'>{$inner}</a>";
         
         return $string;
